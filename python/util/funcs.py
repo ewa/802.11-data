@@ -1,6 +1,7 @@
 import math 
 from ..constants.plcp_times import T
 from ..constants.mcs_indices import tables
+import mcs_table
 import xxx_defaults
 
 
@@ -168,10 +169,13 @@ def HT_TXTIME_GREENFIELD(short_gi_p, length):
 
 
 def _main(args):
+    import pprint
     """ Test routine.  Do not use for anything!"""
     print HT_TXTIME('mixed',False,1,1)
 
-    print tables
+    #print pprint.pprint(tables)
+    foo = mcs_table.combine_tables(tables)
+    print foo.to_string()
 
 if __name__ == '__main__':
     import sys
