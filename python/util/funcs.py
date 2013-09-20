@@ -1,6 +1,6 @@
 import math 
-import constants.plcp_times as pt
-import constants.mcs_indices as mi
+from ..constants.plcp_times import T
+from ..constants.mcs_indices import tables
 import xxx_defaults
 
 
@@ -70,23 +70,23 @@ def N_SYM_LDPC(length):
 ## See \s 20.4.3
 
 ## Non-HT preamble
-T_LEG_PREAMBLE = pt.T['L-STF'] + pt.T['L-LTF']
+T_LEG_PREAMBLE = T['L-STF'] + T['L-LTF']
 
 ## HT-mixed preable
 def T_HT_PREAMBLE(N_LTF):
-    T_HT_LTF1 = pt.T['HT-MIXED-LTF1']
+    T_HT_LTF1 = T['HT-MIXED-LTF1']
     
-    return (pt.T['HT-STF'] +
+    return (T['HT-STF'] +
             T_HT_LTF1 + 
-            (N_LTF-1)*pt.T['HT-LTFs'])
+            (N_LTF-1)*T['HT-LTFs'])
 
 ## HT-greenfield preable
 def T_GF_HT_PREAMBLE(N_LTF):
-    T_HT_LTF1 = pt.T['HT-GF-LTF1']
+    T_HT_LTF1 = T['HT-GF-LTF1']
 
-    return (pt.T['HT-GF-STF'] +
+    return (T['HT-GF-STF'] +
             T_HT_LTF1 + 
-            (N_LTF-1)*pt.T['HT-LTFs'])
+            (N_LTF-1)*T['HT-LTFs'])
 
 
 def HT_TXTIME(mode, short_gi_p, N_SS, length ):
@@ -131,9 +131,9 @@ def HT_TXTIME_MIXED(short_gi_p, N_LTF, length):
     ### Common portion of 20-91 and 20-92
     SignalExtension = xxx_defaults.SignalExtension
     t_shared = (T_LEG_PREAMBLE +
-                pt.T['L-SIG'] +
+                T['L-SIG'] +
                 T_HT_PREAMBLE(N_LTF) +
-                pt.T['HT-SIG'] +
+                T['HT-SIG'] +
                 SignalExtension)
     
     BCC_p  = xxx_defaults.BCC_p
@@ -151,10 +151,10 @@ def HT_TXTIME_MIXED(short_gi_p, N_LTF, length):
 
     if short_gi_p:
         # Equation 20-91: Short (400 ns) GI
-        t_data = pt.T['SYM'] * math.ceil((pt.T['SYMS']*N_SYM)/(pt.T['SYM']))
+        t_data = T['SYM'] * math.ceil((T['SYMS']*N_SYM)/(T['SYM']))
     else:
         # Equation 20-92: Standard/Long (800 ns) GI
-        t_data = pt.T['SYM'] * N_SYM
+        t_data = T['SYM'] * N_SYM
 
     return t_shared + t_data
 
@@ -171,7 +171,7 @@ def _main(args):
     """ Test routine.  Do not use for anything!"""
     print HT_TXTIME('mixed',False,1,1)
 
-    print mi.tables
+    print tables
 
 if __name__ == '__main__':
     import sys

@@ -1,4 +1,4 @@
-from ..mcs_table import MCS_Table
+from ..util.mcs_table import MCS_Table
 
 
 def __init__():
