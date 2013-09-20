@@ -1,4 +1,12 @@
-#Table 20-30: 20 MHz, N_SS=1, N_ES=1o
+#MCS Parameter tables (20-30 through 20-44) from IEEE Std 802.11-2012, Clause 20
+#(aka High Throughput PHY / 802.11n) 
+# NOTES:
+#  1. Not all tables have the same column structure
+#  2. I've omitted the column names when a table continues with the same structure as the previous one.
+#  3. I've abbreviated a couple of column names
+#  4. This table uses tab characters '\t' as delimiters, carriage return '\n' as line break, and no quoting.  Values can contain space characters.
+
+#Table 20-30: 20 MHz, N_SS=1, N_ES=1
 MCS Index	Mod.	R	NBPSCS(iSS)	NSD	NSP	NCBPS	NDBPS	DR 800 ns	DR 400 ns
 0	BPSK	1/2	1	52	4	52	26	6.5	7.2
 1	QPSK	1/2	2	52	4	104	52	13.0	14.4

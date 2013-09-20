@@ -8,7 +8,7 @@ Raw Data
 
 Data straight from the standards documents, processed as little as possible:
 
-* [raw/MCS_HT.tab](raw/MCS_ht.tab) MCS parameter tables for High-Throughput PHY (that is, 802.11 / Clause 20).  Note that this file contains multiple tables, not all of which have the same column structure.
+* [raw/MCS_HT.tab](raw/MCS_HT.tab) MCS parameter tables for High-Throughput PHY (that is, 802.11 / Clause 20).  Note that this file contains multiple tables, not all of which have the same column structure.
 
 Software
 --------
