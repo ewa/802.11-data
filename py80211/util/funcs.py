@@ -1,6 +1,7 @@
 import math 
 from ..constants.plcp_times import T
-from ..constants.mcs_indices import tables
+from ..constants.mcs_indices import tables, HT_AGGREGATE_TABLE
+
 import mcs_table
 import xxx_defaults
 
@@ -90,14 +91,15 @@ def T_GF_HT_PREAMBLE(N_LTF):
             (N_LTF-1)*T['HT-LTFs'])
 
 
-def HT_TXTIME(mode, short_gi_p, N_SS, length ):
+def HT_TXTIME(mode, short_gi_p, chan_width, MCS_idx, length ):
     """
     TXTIME calculation from \S 20.4.3
 
     Args:
         mode       : 'greenfield' or 'mixed'
         short_gi_p : True for 400ns guard interval, False for 800ns (standard)
-        N_SS       : Number of spatial streams
+        chan_width : Channel width in MHz
+        MCS_idx    : MCS Index
         length     : Length of the PSDU (roughly 'data') in bits
 
     Returns:
@@ -107,7 +109,13 @@ def HT_TXTIME(mode, short_gi_p, N_SS, length ):
         ValueError, KeyError, NotImplementedError
     """
 
-    
+    phy_parms = HT_AGGREGATE_TABLE.get_params(chan_width=chan_width,
+                                              mcs_index=MCS_idx,
+                                              phy='HT')
+
+    N_SS = int(phy_parms['N_SS'])
+    N_ES = int(phy_parms['N_ES'])
+    N_DBPS = int(phy_parms['NDBPS'])
     STBC   = xxx_defaults.STBC
     N_ESS  = xxx_defaults.N_ESS
         
@@ -122,11 +130,12 @@ def HT_TXTIME(mode, short_gi_p, N_SS, length ):
     try:
         func = {'mixed'     :HT_TXTIME_MIXED,
                 'greenfield':HT_TXTIME_GREENFIELD}[mode]
-        return func(short_gi_p, N_LTF, length)
+        return func(short_gi_p, N_LTF, N_ES, N_DBPS, length)
+    
     except KeyError, e:
         raise KeyError('Unknown HT mode {}'.format(mode), e)
 
-def HT_TXTIME_MIXED(short_gi_p, N_LTF, length):
+def HT_TXTIME_MIXED(short_gi_p, N_LTF, N_ES, N_DBPS, length):
     """ Equations 20-91 & 20-92"""
 
     ### Common portion of 20-91 and 20-92
@@ -139,9 +148,7 @@ def HT_TXTIME_MIXED(short_gi_p, N_LTF, length):
     
     BCC_p  = xxx_defaults.BCC_p
     STBC_p = xxx_defaults.STBC_p
-    N_ES   = xxx_defaults.N_ES
-    N_DBPS = xxx_defaults.N_DBPS
-
+    
 
     if BCC_p:
         N_SYM = N_SYM_BCC(length, STBC_p, N_ES, N_DBPS)
@@ -171,11 +178,15 @@ def HT_TXTIME_GREENFIELD(short_gi_p, length):
 def _main(args):
     import pprint
     """ Test routine.  Do not use for anything!"""
-    print HT_TXTIME('mixed',False,1,1)
+    print HT_TXTIME('mixed',False,20,0,40)
 
     #print pprint.pprint(tables)
     foo = mcs_table.combine_tables(tables)
-    print foo.to_string()
+    bar = mcs_table.WrappedTable(foo)        
+    # print bar
+    # print bar.get_params(chan_width=20,mcs_index=2)
+    # print type(bar.get_params(chan_width=20,mcs_index=2,p_list=['Mod. Stream 1', 'DR 800 ns']))
+    # print "'" + str(bar.get_params(chan_width=20,mcs_index=2)['Mod. Stream 1']) + "'"
 
 if __name__ == '__main__':
     import sys

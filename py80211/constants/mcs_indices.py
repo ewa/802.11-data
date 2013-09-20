@@ -1,4 +1,4 @@
-from ..util.mcs_table import MCS_Table
+from ..util.mcs_table import MCS_Table, combine_tables, WrappedTable
 
 
 def __init__():
@@ -241,6 +241,7 @@ tables=[TABLE_20_30,
         TABLE_20_44,
         ]
 
+HT_AGGREGATE_TABLE=WrappedTable(combine_tables(tables))
 
 def main(args):
     """Test/demo"""

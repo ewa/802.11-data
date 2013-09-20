@@ -6,6 +6,11 @@ class MCS_Table(object):
     MAX_SS = 4                          # Maximum spatial streams
 
     def __init__(self, text, phy_type, chan_width, N_SS, N_ES, EQM):
+        """
+        Standard initializer:
+        
+        From textual representation of table, and supplied ancillary information.        
+        """
         self.phy_type = phy_type
         self.chan_width_MHz = chan_width
         self.N_SS = N_SS
@@ -13,6 +18,18 @@ class MCS_Table(object):
         self.EQM = EQM
         self.text = text
         self.tab = self._panda()
+
+    # def __init__(self, full_table):
+    #     """
+    #     Wrap existing _panda-generated table.        
+    #     """
+
+    #     self.tab = full_table
+    #     self.phy_type = None
+    #     self.chan_width_MHz = None
+    #     self.N_SS = None
+    #     self.EQM = None
+    #     self.text = 'N/A'
 
     def __str__(self):
         return "{} PHY, {} MHz, {} SS, {} ES, EQM={}".format(
@@ -75,4 +92,27 @@ class MCS_Table(object):
 def combine_tables (tables):
     dfs = [t.as_DataFrame() for t in tables]
     return pd.concat(dfs, ignore_index=True)
+
+
+class WrappedTable (object):
+
+    def __init__(self, panda_tab):
+        self.tab = panda_tab
+
+    def get_params(self, chan_width, mcs_index, phy='HT', p_list=None):
+        result= self.tab.ix[(self.tab['Chan MHz'] == chan_width) &
+                            (self.tab['MCS Index'] == mcs_index) &
+                            (self.tab['PHY']==phy)]
+        (nrow, ncol) = result.shape
+        if nrow < 1:
+            raise KeyError("No results for PHY={}, Chan MHz={}, MCS Index={}".format(phy, chan_width, mcs_index))
+        if nrow > 1:
+            msg="Non-unique results for PHY={}, Chan MHz={}, MCS Index={}".format(phy, chan_width, mcs_index)
+            raise ValueError(msg, result)
+        if p_list is None:
+            return result
+        else:
+            return result.ix[:,p_list]
+    
+    
 
