@@ -1,34 +1,11 @@
+import math 
+import constants.plcp_times as pt
+import constants.mcs_indices as mi
+import xxx_defaults
+
+
 def __init__():
     pass
-#802.11 HT (N) PLCP
-
-## See especially equations 20-91 through 20-94, in \s 20.4.3
-## And tables 20-29 through 30-44? in \s 20.6 (Parameters for HT MCSs)
-
-## PLCP sequences -- see \s 20.3
-## Non-HT:
-## L-STF (8 us),
-## L-LTF (8 us),
-## L-SIG (4 us)
-## = 20 us
-
-## HT-Mixed:
-## L-STF,
-## L-LTF,
-## L-SIG,
-## HT-SIG (8 us),
-## HT-STF (4 us),
-## Data HT-DLTFs (4 us per LTF) (may be 1, 2 or 4),
-## Extension HT-ELTFs (4 us per LTF) (may be 0, 1, 2 or 4),
-## = 32 us + data & extension LTFs
-
-## HT-Greenfield:
-## GT-GF-STF (8 us),
-## HT-LTF1 (8 us),
-## HT-SIG (8 us),
-## Data HT-DLTFs (4 us per LTF) (may be 1, 2 or 4),
-## Extension HT-ELTFs (4 us per LTF) (may be 0, 1, 2 or 4),
-## = 24 us + data & extension LTFs
 
 
 def N_STS_from_N_SS(N_SS, STBC):
@@ -61,11 +38,18 @@ def N_HTELTF_from_N_ESS(N_ESS):
     return table_20_14[N_ESS]
 
 def N_SYM_BCC(length, STBC_p, N_ES, N_DBPS):
-    """Number of symbols for data.  Equation 20-32 & discussion.
+    """
+    Number of symbols for data.
 
-    length: # of data bits,
-    N_DBPS: # of data bits per OFDM symbol
-    N_ES = Number of BCC encoders
+    Equation 20-32 & discussion.
+
+    Args:
+        length: # of data bits,
+        N_DBPS: # of data bits per OFDM symbol
+        N_ES = Number of BCC encoders
+
+    Returns:
+        Number of symbols used
     """
 
 
@@ -83,4 +67,112 @@ def N_SYM_LDPC(length):
     
     raise NotImplementedError()
 
+## See \s 20.4.3
+
+## Non-HT preamble
+T_LEG_PREAMBLE = pt.T['L-STF'] + pt.T['L-LTF']
+
+## HT-mixed preable
+def T_HT_PREAMBLE(N_LTF):
+    T_HT_LTF1 = pt.T['HT-MIXED-LTF1']
+    
+    return (pt.T['HT-STF'] +
+            T_HT_LTF1 + 
+            (N_LTF-1)*pt.T['HT-LTFs'])
+
+## HT-greenfield preable
+def T_GF_HT_PREAMBLE(N_LTF):
+    T_HT_LTF1 = pt.T['HT-GF-LTF1']
+
+    return (pt.T['HT-GF-STF'] +
+            T_HT_LTF1 + 
+            (N_LTF-1)*pt.T['HT-LTFs'])
+
+
+def HT_TXTIME(mode, short_gi_p, N_SS, length ):
+    """
+    TXTIME calculation from \S 20.4.3
+
+    Args:
+        mode       : 'greenfield' or 'mixed'
+        short_gi_p : True for 400ns guard interval, False for 800ns (standard)
+        N_SS       : Number of spatial streams
+        length     : Length of the PSDU (roughly 'data') in bits
+
+    Returns:
+        Duration of transmit time in microseconds
+
+    Raises:
+        ValueError, KeyError, NotImplementedError
+    """
+
+    
+    STBC   = xxx_defaults.STBC
+    N_ESS  = xxx_defaults.N_ESS
         
+    ## How many LTFs?  See eq. 20-22
+    N_STS = N_STS_from_N_SS(N_SS, STBC)
+    N_DLTF = N_HTDLTF_from_N_STS(N_STS)
+    N_ELTF = N_HTELTF_from_N_ESS(N_ESS)
+    N_LTF = N_DLTF + N_ELTF
+    if N_LTF > 5:
+        raise ValueError("At most 5 LTFs are allowed.  See \s 20.3.9.4.6", N_LTF)
+    
+    try:
+        func = {'mixed'     :HT_TXTIME_MIXED,
+                'greenfield':HT_TXTIME_GREENFIELD}[mode]
+        return func(short_gi_p, N_LTF, length)
+    except KeyError, e:
+        raise KeyError('Unknown HT mode {}'.format(mode), e)
+
+def HT_TXTIME_MIXED(short_gi_p, N_LTF, length):
+    """ Equations 20-91 & 20-92"""
+
+    ### Common portion of 20-91 and 20-92
+    SignalExtension = xxx_defaults.SignalExtension
+    t_shared = (T_LEG_PREAMBLE +
+                pt.T['L-SIG'] +
+                T_HT_PREAMBLE(N_LTF) +
+                pt.T['HT-SIG'] +
+                SignalExtension)
+    
+    BCC_p  = xxx_defaults.BCC_p
+    STBC_p = xxx_defaults.STBC_p
+    N_ES   = xxx_defaults.N_ES
+    N_DBPS = xxx_defaults.N_DBPS
+
+
+    if BCC_p:
+        N_SYM = N_SYM_BCC(length, STBC_p, N_ES, N_DBPS)
+    else:
+        ### XXX will need other parameters
+        N_SYM = N_SYM_LDPC(length)
+
+
+    if short_gi_p:
+        # Equation 20-91: Short (400 ns) GI
+        t_data = pt.T['SYM'] * math.ceil((pt.T['SYMS']*N_SYM)/(pt.T['SYM']))
+    else:
+        # Equation 20-92: Standard/Long (800 ns) GI
+        t_data = pt.T['SYM'] * N_SYM
+
+    return t_shared + t_data
+
+
+def get_PHY_params():
+    pass
+
+def HT_TXTIME_GREENFIELD(short_gi_p, length):
+    raise NotImplementedError()
+
+
+
+def _main(args):
+    """ Test routine.  Do not use for anything!"""
+    print HT_TXTIME('mixed',False,1,1)
+
+    print mi.tables
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(_main(sys.argv))

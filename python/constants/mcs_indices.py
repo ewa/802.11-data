@@ -1,4 +1,4 @@
-from mcs_table import MCS_Table
+from ..mcs_table import MCS_Table
 
 
 def __init__():
@@ -224,27 +224,29 @@ _TABLE_20_44_txt = """MCS Index	Mod. Stream 1	Mod. Stream 2	Mod. Stream 3	Mod. S
 76	64-QAM	64-QAM	64-QAM	16-QAM	3/4	22	108	6	2376	1782	2	445.5	495"""
 TABLE_20_44 = MCS_Table(_TABLE_20_44_txt, 'HT', 40, 4, None, False)
 
+tables=[TABLE_20_30,
+        TABLE_20_31,
+        TABLE_20_32,
+        TABLE_20_33,
+        TABLE_20_34,
+        TABLE_20_35,
+        TABLE_20_36,
+        TABLE_20_37,
+        TABLE_20_38,
+        TABLE_20_39,
+        TABLE_20_40,
+        TABLE_20_41,
+        TABLE_20_42,
+        TABLE_20_43,
+        TABLE_20_44,
+        ]
+
+
 def main(args):
     """Test/demo"""
     import csv
     #table_20_30 = csv.DictReader(TABLE_20_30_txt.splitlines(), dialect=csv.excel_tab)
     #print list(table_20_30)
-    tables=[TABLE_20_30,
-            TABLE_20_31,
-            TABLE_20_32,
-            TABLE_20_33,
-            TABLE_20_34,
-            TABLE_20_35,
-            TABLE_20_36,
-            TABLE_20_37,
-            TABLE_20_38,
-            TABLE_20_39,
-            TABLE_20_40,
-            TABLE_20_41,
-            TABLE_20_42,
-            TABLE_20_43,
-            TABLE_20_44,
-            ]
 
     print "\n\n".join([str(t) for t in tables])
 
